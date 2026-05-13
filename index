@@ -1,0 +1,32 @@
+import mysql.connector
+
+try:
+    # 1. Connect to the MySQL Server
+    # Note: We do NOT include 'database=' in the connection parameters yet
+    db_server = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Holay@123"
+    )
+
+    cursor = db_server.cursor()
+
+    # 2. Execute the CREATE DATABASE query
+    # We use 'IF NOT EXISTS' to prevent errors if the DB is already there
+    db_name = "SmartVotingSystem"
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
+    
+    print(f"Database '{db_name}' created successfully!")
+
+    # 3. Switch to the new database
+    cursor.execute(f"USE {db_name}")
+    print(f"Now using database: {db_name}")
+
+except mysql.connector.Error as err:
+    print(f"Error: {err}")
+
+finally:
+    if 'db_server' in locals() and db_server.is_connected():
+        cursor.close()
+        db_server.close()
+ 

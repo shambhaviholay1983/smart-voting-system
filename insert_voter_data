@@ -1,0 +1,89 @@
+import mysql.connector
+from mysql.connector import Error
+
+def seed_database():
+    try:
+        # 1. Connect to the specific database
+        connection = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="Holay@123",  # Enter your password here
+            database="SmartVotingSystem"
+        )
+
+        if connection.is_connected():
+            cursor = connection.cursor()
+
+            # --- DATA PREPARATION ---
+            
+            # Data for Aadhaar_Master (aadhaar_number, full_name, biometric_hash)
+            aadhaar_records = [
+                ('123456789012', 'Aarav Sharma', 'IRIS_SCAN_A101'),
+                ('987654321098', 'Priya Patel', 'IRIS_SCAN_B202'),
+                ('456789123456', 'Rohan Gupta', 'IRIS_SCAN_C303'),
+                ('321654987321', 'Ananya Iyer', 'IRIS_SCAN_D404'),
+                ('654321098765', 'Vikram Singh', 'IRIS_SCAN_E505'),
+                 ('654321098766', 'Vikrant Singh', 'IRIS_SCAN_E505'),
+                   ('654321098776', 'Vikrant Singh', 'IRIS_SCAN_E505')
+            ]
+
+            # Data for EPIC_Master (epic_id, voter_status)
+            epic_records = [
+                ('ABC1234567', 'Active'),
+                ('XYZ9876543', 'Active'),
+                ('LMN4567890', 'Active'),
+                ('PQR3216549', 'Active'),
+                ('STU6543210', 'Active'),
+                 ('STU6543211', 'Active'),
+                   ('STU6543217', 'Active')
+            ]
+
+            # Data for Aadhaar_EPIC_Link (aadhaar_number, epic_id)
+            # This maps the unique IDs together
+            linking_records = [
+                ('123456789012', 'ABC1234567'),
+                ('987654321098', 'XYZ9876543'),
+                ('456789123456', 'LMN4567890'),
+                ('321654987321', 'PQR3216549'),
+                ('654321098765', 'STU6543210')
+            ]
+
+            # --- EXECUTION ---
+
+            # We use INSERT IGNORE so the script doesn't crash if you run it twice
+            print("Inserting data into Aadhaar_Master...")
+            cursor.executemany("""
+                INSERT IGNORE INTO Aadhaar_Master (aadhaar_number, full_name, biometric_hash) 
+                VALUES (%s, %s, %s)
+            """, aadhaar_records)
+
+            print("Inserting data into EPIC_Master...")
+            cursor.executemany("""
+                INSERT IGNORE INTO EPIC_Master (epic_id, voter_status) 
+                VALUES (%s, %s)
+            """, epic_records)
+
+            print("Establishing links in Aadhaar_EPIC_Link...")
+            cursor.executemany("""
+                INSERT IGNORE INTO Aadhaar_EPIC_Link (aadhaar_number, epic_id) 
+                VALUES (%s, %s)
+            """, linking_records)
+
+            # CRITICAL: Commit changes to the database
+            connection.commit()
+            
+            print("---------------------------------------")
+            print(f"Successfully synced {cursor.rowcount} new voter profiles.")
+            print("Your Smart Voting Simulator is now ready with test data.")
+
+    except Error as e:
+        print(f"Error: {e}")
+
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+            print("MySQL connection closed.")
+
+if __name__ == "__main__":
+    seed_database()

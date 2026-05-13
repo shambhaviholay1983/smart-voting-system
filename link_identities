@@ -1,0 +1,55 @@
+import mysql.connector
+from mysql.connector import Error
+
+def link_voter(aadhaar_num, epic_id_val):
+    # Fix 1: Initialize connection to None
+    connection = None
+    
+    try:
+        # 1. Connect to your database
+        connection = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="Holay@123",  # Enter your MySQL password here
+            database="SmartVotingSystem"
+        )
+
+        # Fix 2: Check if connection exists before using it
+        if connection and connection.is_connected():
+            cursor = connection.cursor()
+
+            # 2. Check if the Aadhaar exists in Aadhaar_Master
+            cursor.execute("SELECT full_name FROM Aadhaar_Master WHERE aadhaar_number = %s", (aadhaar_num,))
+            aadhaar_record = cursor.fetchone()
+
+            # 3. Check if the EPIC ID exists in EPIC_Master
+            cursor.execute("SELECT voter_status FROM EPIC_Master WHERE epic_id = %s", (epic_id_val,))
+            epic_record = cursor.fetchone()
+
+            if aadhaar_record and epic_record:
+                print(f"Found Records: {aadhaar_record[0]} and EPIC {epic_id_val}")
+                
+                # 4. Insert the link into Aadhaar_EPIC_Link
+                insert_query = "INSERT INTO Aadhaar_EPIC_Link (aadhaar_number, epic_id) VALUES (%s, %s)"
+                cursor.execute(insert_query, (aadhaar_num, epic_id_val))
+                
+                connection.commit()
+                print(f"Successfully linked Aadhaar ...{aadhaar_num[-4:]} to EPIC {epic_id_val}")
+            else:
+                print("Error: Aadhaar or EPIC ID not found in Master tables.")
+
+    except Error as e:
+        print(f"Database Error: {e}")
+
+    finally:
+        # Fix 3: Safely close the connection only if it was successfully opened
+        if connection is not None and connection.is_connected():
+            cursor.close()
+            connection.close()
+            print("MySQL connection closed.")
+
+# --- RUNNING THE LINKER ---
+target_aadhaar = "123456789012"
+target_epic = "ABC1234567"
+
+link_voter(target_aadhaar, target_epic)
