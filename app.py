@@ -1,6 +1,8 @@
-import os
+from flask import Flask
 
-if __name__ == "__main__":
-    # Render कडून मिळणारा पोर्ट वापरा किंवा डिफॉल्ट 5000 वापरा
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+# ही ओळ तपासा. 'app' हे नाव लहान अक्षरात (lowercase) असणे आवश्यक आहे.
+app = Flask(__name__) 
+
+@app.route('/')
+def index():
+    return "Hello World"
