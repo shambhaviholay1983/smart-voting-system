@@ -1,0 +1,32 @@
+import os
+import psycopg2
+
+# Replace this with your actual Render External Database URL for local testing,
+# or use os.environ.get('DATABASE_URL') if running on Render.
+DATABASE_URL = "your_render_postgresql_connection_string_here"
+
+try:
+    # Attempt to connect
+    connection = psycopg2.connect(DATABASE_URL)
+    
+    # Create a cursor to perform database operations
+    cursor = connection.cursor()
+    
+    # Execute a simple query to fetch the database version
+    cursor.execute("SELECT version();")
+    db_version = cursor.fetchone()
+    
+    print("====================================")
+    print("SUCCESS: Connected to Render Database!")
+    print(f"Database version: {db_version[0]}")
+    print("====================================")
+    
+    # Close the connection
+    cursor.close()
+    connection.close()
+
+except Exception as error:
+    print("====================================")
+    print("CONNECTION FAILED ❌")
+    print(f"Error details: {error}")
+    print("====================================")
