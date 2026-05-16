@@ -13,7 +13,7 @@ import voting_manager
 
 app = Flask(__name__)
 
-@app.route('/voting_manager')
+@app.route('/verify-vote')
 def verify():
     # Example of accessing a function inside voting_manager
     # success = verify_voter_biometrics(voter_id)
