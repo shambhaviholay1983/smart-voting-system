@@ -1,11 +1,11 @@
 from flask import Flask, render_template
 
 # ही ओळ तपासा. 'app' हे नाव लहान अक्षरात (lowercase) असणे आवश्यक आहे.
-app = Flask(__name__) 
+#app = Flask(__name__) 
 
-@app.route('/')
-def index():
-    return "Hello World phd"
+#@app.route('/')
+#def index():
+#    return "Hello World phd"
 
 # This imports everything or specific items from your voting_manager.py file
 import voting_manager 
@@ -13,7 +13,7 @@ import voting_manager
 
 app = Flask(__name__)
 
-@app.route('/verify-vote')
+@app.route('/voting_manager')
 def verify():
     # Example of accessing a function inside voting_manager
     # success = verify_voter_biometrics(voter_id)
