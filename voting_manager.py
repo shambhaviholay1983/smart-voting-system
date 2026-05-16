@@ -1,114 +1,61 @@
-import tkinter as tk
-from tkinter import messagebox, ttk
-import mysql.connector
-from mysql.connector import Error
-import threading
-import time
+import os
+import psycopg2
+from psycopg2 import extras
 
-# --- Database Logic and Animation Function ---
-def process_linking():
-    aadhaar = entry_aadhaar.get().strip()
-    epic = entry_epic.get().strip()
-
-    # Basic Validation
-    if not aadhaar or not epic:
-        messagebox.showwarning("Input Missing", "Please provide both Aadhaar Number and EPIC ID to proceed.")
-        return
-
-    connection = None
+# This function connects to your Render PostgreSQL database
+def get_db_connection():
+    # Render automatically provides DATABASE_URL in Environment Variables
+    DATABASE_URL = os.environ.get('DATABASE_URL')
     try:
-        connection = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="Holay@123",
-            database="SmartVotingSystem"
-        )
+        conn = psycopg2.connect(DATABASE_URL)
+        return conn
+    except Exception as e:
+        print(f"Error connecting to database: {e}")
+        return None
 
-        if connection.is_connected():
-            cursor = connection.cursor()
-            
-            # 1. Verify Aadhaar in Master Table
-            cursor.execute("SELECT full_name FROM Aadhaar_Master WHERE aadhaar_number = %s", (aadhaar,))
-            if not cursor.fetchone():
-                messagebox.showerror("Identity Error", f"The Aadhaar ID [Redacted] is not present in the Master Database.\nPlease provide a corrected Aadhaar ID.")
-                return
+def process_linking(aadhaar, epic):
+    """
+    Handles the logic of linking Aadhaar and EPIC.
+    Returns a tuple: (Success Status [True/False], Message)
+    """
+    
+    # 1. Basic Validation
+    if not aadhaar or not epic:
+        return False, "Please provide both Aadhaar Number and EPIC ID."
 
-            # 2. Verify EPIC ID in Master Table
-            cursor.execute("SELECT epic_id FROM EPIC_Master WHERE epic_id = %s", (epic,))
-            if not cursor.fetchone():
-                messagebox.showerror("Electoral Error", f"The EPIC ID '{epic}' was not found in the Voter List.\nPlease provide a corrected EPIC ID.")
-                return
+    connection = get_db_connection()
+    if not connection:
+        return False, "Database connection failed. Please try again later."
 
-            # 3. Check for Existing Link (Duplicate Prevention)
-            cursor.execute("SELECT * FROM Aadhaar_EPIC_Link WHERE aadhaar_number = %s OR epic_id = %s", (aadhaar, epic))
-            if cursor.fetchone():
-                messagebox.showwarning("Security Alert", "Linkage Conflict Detected:\nThis Aadhaar and EPIC ID are already linked with each other.")
-                return
+    try:
+        cursor = connection.cursor(cursor_factory=extras.RealDictCursor)
+        
+        # 2. Verify Aadhaar in Master Table
+        # Using %s to prevent SQL Injection
+        cursor.execute("SELECT full_name FROM Aadhaar_Master WHERE aadhaar_number = %s", (aadhaar,))
+        if not cursor.fetchone():
+            return False, "The Aadhaar ID provided is not present in the Master Database."
 
-            # 4. Success Path: Show Processing Bar
-            progress_window = tk.Toplevel(root)
-            progress_window.title("System Processing")
-            progress_window.geometry("300x150")
-            progress_window.grab_set() # Focus on this window
-            
-            tk.Label(progress_window, text="Syncing Records...", font=("Segoe UI", 10)).pack(pady=10)
-            
-            progress_bar = ttk.Progressbar(progress_window, orient="horizontal", length=200, mode="determinate")
-            progress_bar.pack(pady=10)
-            
-            # Progress Bar Simulation (2 seconds)
-            for i in range(1, 101, 5):
-                time.sleep(0.1) # Total ~2 seconds
-                progress_bar['value'] = i
-                progress_window.update_idletasks()
-            
-            # 5. Finalize the Database Link
-            query = "INSERT INTO Aadhaar_EPIC_Link (aadhaar_number, epic_id) VALUES (%s, %s)"
-            cursor.execute(query, (aadhaar, epic))
-            connection.commit()
-            
-            progress_window.destroy()
-            messagebox.showinfo("Verification Success", f"Identity Authentication Successful!\nAadhaar and EPIC records have been linked successfully.")
+        # 3. Verify EPIC ID in Master Table
+        cursor.execute("SELECT epic_id FROM EPIC_Master WHERE epic_id = %s", (epic,))
+        if not cursor.fetchone():
+            return False, f"The EPIC ID '{epic}' was not found in the Voter List."
 
-    except Error as e:
-        messagebox.showerror("Database Critical Error", f"External system failure: {e}")
+        # 4. Check for Existing Link (Duplicate Prevention)
+        cursor.execute("SELECT * FROM Aadhaar_EPIC_Link WHERE aadhaar_number = %s OR epic_id = %s", (aadhaar, epic))
+        if cursor.fetchone():
+            return False, "Security Alert: This Aadhaar or EPIC ID is already linked."
+
+        # 5. Finalize the Database Link
+        query = "INSERT INTO Aadhaar_EPIC_Link (aadhaar_number, epic_id) VALUES (%s, %s)"
+        cursor.execute(query, (aadhaar, epic))
+        connection.commit()
+        
+        return True, "Identity Authentication Successful! Records have been linked."
+
+    except Exception as e:
+        return False, f"System failure: {str(e)}"
+    
     finally:
-        if connection and connection.is_connected():
-            cursor.close()
-            connection.close()
-
-# Using threading to prevent UI freeze during delay
-def start_thread():
-    threading.Thread(target=process_linking, daemon=True).start()
-
-# --- GUI Layout Settings ---
-root = tk.Tk()
-root.title("Smart Voting System - Secure Connector")
-root.geometry("450x380")
-root.configure(padx=30, pady=30, bg="#f5f5f5")
-
-# Professional Header
-header_label = tk.Label(root, text="VOTER IDENTITY PORTAL", font=("Segoe UI", 16, "bold"), bg="#f5f5f5", fg="#2c3e50")
-header_label.pack(pady=(0, 20))
-
-# Aadhaar Input
-tk.Label(root, text="12-Digit Aadhaar Number:", font=("Segoe UI", 10), bg="#f5f5f5").pack(anchor="w")
-entry_aadhaar = ttk.Entry(root, width=50)
-entry_aadhaar.pack(pady=(5, 15))
-
-# EPIC Input
-tk.Label(root, text="EPIC ID (Voter ID):", font=("Segoe UI", 10), bg="#f5f5f5").pack(anchor="w")
-entry_epic = ttk.Entry(root, width=50)
-entry_epic.pack(pady=(5, 25))
-
-# Themed Button
-style = ttk.Style()
-style.configure("TButton", font=("Segoe UI", 10, "bold"), padding=10)
-btn_link = ttk.Button(root, text="LINK IDENTITIES", command=start_thread)
-btn_link.pack(fill="x")
-
-# Footer Security Note
-tk.Label(root, text="* Secure biometric-linked authentication protocol active.", 
-         font=("Segoe UI", 8, "italic"), bg="#f5f5f5", fg="#7f8c8d").pack(pady=20)
-
-root.mainloop()
+        cursor.close()
+        connection.close()
