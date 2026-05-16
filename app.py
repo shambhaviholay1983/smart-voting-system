@@ -10,7 +10,7 @@
 # This imports everything or specific items from your voting_manager.py file
 from flask import Flask, render_template
 # This imports everything or specific items from your voting_manager.py file
-import voting_manager 
+import voting_manager
 # OR: from voting_manager import verify_voter_biometrics, initialize_voting_db
 
 app = Flask(__name__)
