@@ -14,7 +14,7 @@ import voting_manager
 # OR: from voting_manager import verify_voter_biometrics, initialize_voting_db
 
 app = Flask(__name__)
-
+   return "ksdjhgkdshgkshd"
 @app.route('/verify-vote')
 def verify():
     # Example of accessing a function inside voting_manager
