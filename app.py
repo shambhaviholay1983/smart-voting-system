@@ -1,3 +1,9 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+import voting_manager  # Now try the import again
+
 # from flask import Flask, render_template
 
 # ही ओळ तपासा. 'app' हे नाव लहान अक्षरात (lowercase) असणे आवश्यक आहे.
@@ -10,7 +16,7 @@
 # This imports everything or specific items from your voting_manager.py file
 from flask import Flask, render_template
 # This imports everything or specific items from your voting_manager.py file
-import voting_manager
+from . import voting_manager
 # OR: from voting_manager import verify_voter_biometrics, initialize_voting_db
 
 app = Flask(__name__)
