@@ -1,7 +1,9 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from flask import Flask
+# ... other imports ...
 
-import voting_manager  # Now try the import again
+app = Flask(__name__) # <--- This variable MUST be named 'app'
 
+# ... your routes ...
 
+if __name__ == "__main__":
+    app.run()
