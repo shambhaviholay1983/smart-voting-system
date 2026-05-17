@@ -14,6 +14,23 @@ def index():
             <button type="submit">Link Identities</button>
         </form>
     '''
+# ... rest of your Flask app code (app = Flask(__name__), etc.)
+@app.route('/link', methods=['POST'])
+def link():
+    aadhaar = request.form.get('aadhaar')
+    epic = request.form.get('epic')
+    
+    # Use the function from your voting_manager.py
+    success, message = voting_manager.process_linking(aadhaar, epic)
+    
+    if success:
+        return f"<h1>Success!</h1><p>{message}</p>"
+    else:
+        return f"<h1>Error</h1><p>{message}</p>"
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
 import voting_manager
 
 # This function will run every time your app starts/restarts
@@ -52,21 +69,3 @@ def setup_database():
 
 # Run the setup before the app starts
 setup_database()
-
-# ... rest of your Flask app code (app = Flask(__name__), etc.)
-@app.route('/link', methods=['POST'])
-def link():
-    aadhaar = request.form.get('aadhaar')
-    epic = request.form.get('epic')
-    
-    # Use the function from your voting_manager.py
-    success, message = voting_manager.process_linking(aadhaar, epic)
-    
-    if success:
-        return f"<h1>Success!</h1><p>{message}</p>"
-    else:
-        return f"<h1>Error</h1><p>{message}</p>"
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
