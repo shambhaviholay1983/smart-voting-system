@@ -3,14 +3,15 @@ import psycopg2
 from psycopg2 import extras
 
 # This function connects to your Render PostgreSQL database
+
 def get_db_connection():
-    # Render automatically provides DATABASE_URL in Environment Variables
     DATABASE_URL = os.environ.get('DATABASE_URL')
     try:
-        conn = psycopg2.connect(DATABASE_URL)
+        # Added sslmode='require' for Render security
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
         return conn
     except Exception as e:
-        print(f"Error connecting to database: {e}")
+        print(f"DATABASE ERROR: {e}") # This will show up in your Render Logs
         return None
 
 def process_linking(aadhaar, epic):
