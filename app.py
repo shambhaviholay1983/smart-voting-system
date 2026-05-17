@@ -26,7 +26,7 @@ def link():
     if success:
         return f"<h1>Success!</h1><p>{message}</p>"
     else:
-        return f"<h1>Error</h1><p>{message}</p>"
+        return f"<h1>Errorsssssssssssssss</h1><p>{message}</p>"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
